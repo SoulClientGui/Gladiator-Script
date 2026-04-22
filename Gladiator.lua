@@ -1,5 +1,5 @@
 -- Gladiator v3 | Key: GladiatorLimited12 | Toggle: RIGHT CTRL
--- All commands work in chat: .fly .esp .tp .heal .gladre etc.
+-- Commands: .fly .esp .tp .heal .gladre .headsit .jerkoff .baseplate .iy etc.
 
 local Players          = game:GetService("Players")
 local RunService       = game:GetService("RunService")
@@ -75,7 +75,7 @@ local AuthBtn=knew("TextButton",{Size=UDim2.new(1,-48,0,44),Position=UDim2.new(0
 knew("UICorner",{CornerRadius=UDim.new(0,8)},AuthBtn); knew("UIStroke",{Color=KRED,Thickness=1.5},AuthBtn)
 local ResultLabel=knew("TextLabel",{Size=UDim2.new(1,-48,0,52),Position=UDim2.new(0,24,0,308),BackgroundColor3=KDEEP_RED,BackgroundTransparency=1,BorderSizePixel=0,Text="",TextColor3=KRED,TextSize=11,Font=Enum.Font.Code,TextXAlignment=Enum.TextXAlignment.Center,TextWrapped=true,ZIndex=4},KF)
 knew("UICorner",{CornerRadius=UDim.new(0,8)},ResultLabel)
-knew("TextLabel",{Size=UDim2.new(1,0,0,24),Position=UDim2.new(0,0,1,-24),BackgroundColor3=KBLACK,BorderSizePixel=0,Text="GLADIATOR © 2025  —  UNAUTHORIZED ACCESS PROHIBITED",TextColor3=KC(38,38,38),TextSize=9,Font=Enum.Font.Code,TextXAlignment=Enum.TextXAlignment.Center,ZIndex=4},KF)
+knew("TextLabel",{Size=UDim2.new(1,0,0,24),Position=UDim2.new(0,0,1,-24),BackgroundColor3=KBLACK,BorderSizePixel=0,Text="GLADIATOR 2025  UNAUTHORIZED ACCESS PROHIBITED",TextColor3=KC(38,38,38),TextSize=9,Font=Enum.Font.Code,TextXAlignment=Enum.TextXAlignment.Center,ZIndex=4},KF)
 
 local flashTick,flashState=0,false
 local flashConn=RunService.Heartbeat:Connect(function(dt)
@@ -94,14 +94,14 @@ ktw(Overlay,{BackgroundTransparency=0.2},0.4); ktw(KF,{BackgroundTransparency=0}
 
 AuthBtn.MouseButton1Click:Connect(function()
     local entered=KeyInput.Text
-    if entered=="" then ResultLabel.BackgroundTransparency=0; ResultLabel.Text="  NO KEY ENTERED"; ResultLabel.TextColor3=KRED; return end
+    if entered=="" then ResultLabel.BackgroundTransparency=0; ResultLabel.Text="NO KEY ENTERED"; ResultLabel.TextColor3=KRED; return end
     AuthBtn.Text="VERIFYING..."; AuthBtn.Active=false
     task.wait(1.2)
     if entered==VALID_KEY then
         flashConn:Disconnect(); KF.BackgroundColor3=KBLACK; FlashLabel.TextColor3=KGREEN
         SDot.BackgroundColor3=KGREEN; SText.Text="AUTHENTICATED"; SText.TextColor3=KGREEN
         ResultLabel.BackgroundTransparency=0; ResultLabel.BackgroundColor3=KDARK_GREEN
-        ResultLabel.Text="  ACCESS GRANTED - Welcome, Gladiator operative."; ResultLabel.TextColor3=KGREEN
+        ResultLabel.Text="ACCESS GRANTED - Welcome, Gladiator operative."; ResultLabel.TextColor3=KGREEN
         knew("UIStroke",{Color=KGREEN,Thickness=1},ResultLabel)
         AuthBtn.Text="AUTHENTICATED"; ktw(AuthBtn,{BackgroundColor3=KC(0,80,34)},0.2)
         task.wait(1.4)
@@ -110,7 +110,7 @@ AuthBtn.MouseButton1Click:Connect(function()
     else
         SDot.BackgroundColor3=KC(255,30,30); SText.Text="INVALID KEY"; SText.TextColor3=KC(255,80,80)
         ResultLabel.BackgroundTransparency=0; ResultLabel.BackgroundColor3=KDEEP_RED
-        ResultLabel.Text="  ACCESS DENIED - Invalid or expired key."; ResultLabel.TextColor3=KC(255,80,80)
+        ResultLabel.Text="ACCESS DENIED - Invalid or expired key."; ResultLabel.TextColor3=KC(255,80,80)
         AuthBtn.Text="AUTHENTICATE"; AuthBtn.Active=true; ktw(AuthBtn,{BackgroundColor3=KDARK_RED},0.12)
     end
 end)
@@ -120,8 +120,19 @@ end)
 -- ════════════════════════════════════════════════
 function loadMainGUI()
 
-local S={fly=false,speed=false,noclip=false,aimlock=false,esp=false,godmode=false,freeze=false,invisible=false,fullbright=false,inf_jump=false,antiafk=false,boxesp=false,tracers=false,nametags=false,ftp=false,headsit=false,jerkoff=false}
-local cfg={flySpeed=50,flyBoost=2,hover=false,walkSpeed=100,sprintMult=2,aimFOV=60,aimSmooth=5,aimHead=true,aimTeam=true,jumpPower=100,zoom=500,spamMsg="GLADIATOR",spamCount=5,espColor=Color3.fromRGB(255,0,0),notifs=true,fpsCounter=true}
+local S={
+    fly=false,speed=false,noclip=false,aimlock=false,esp=false,godmode=false,
+    freeze=false,invisible=false,fullbright=false,inf_jump=false,antiafk=false,
+    boxesp=false,tracers=false,nametags=false,ftp=false,headsit=false,jerkoff=false
+}
+local cfg={
+    flySpeed=50,flyBoost=2,hover=false,walkSpeed=100,sprintMult=2,
+    aimFOV=60,aimSmooth=5,aimHead=true,aimTeam=true,jumpPower=100,zoom=500,
+    spamMsg="GLADIATOR",spamCount=5,espColor=Color3.fromRGB(255,0,0),
+    notifs=true,fpsCounter=true,bpColor=Color3.fromRGB(50,50,50),
+    jerkingEnabled=false,jerkingSpeed=0.6,jerkTimePosition=0.6,
+    _jerkTrack=nil,_jerkAnim=nil
+}
 
 local flyConn,noclipConn,aimConn,jumpConn,afkConn,ftpConn
 local tracerObjs,boxObjs,nameTagObjs,espHighlights={},{},{},{}
@@ -157,10 +168,8 @@ local function stopFly()
     local h=hum(); if h then h.PlatformStand=false end
 end
 
--- SPEED
 local function applySpeed(on) local h=hum(); if not h then return end; h.WalkSpeed=on and cfg.walkSpeed or 16 end
 
--- NOCLIP
 local function startNoclip()
     noclipConn=RunService.Stepped:Connect(function()
         local c=char(); if not c then return end
@@ -173,7 +182,6 @@ local function stopNoclip()
     for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end
 end
 
--- AIMLOCK
 local function startAimlock()
     aimConn=RunService.RenderStepped:Connect(function()
         if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then return end
@@ -196,7 +204,6 @@ local function startAimlock()
 end
 local function stopAimlock() if aimConn then aimConn:Disconnect(); aimConn=nil end end
 
--- ESP
 local function refreshESP()
     for _,h in ipairs(espHighlights) do pcall(function() h:Destroy() end) end; espHighlights={}
     if not S.esp then return end
@@ -211,7 +218,6 @@ local function refreshESP()
     end
 end
 
--- BOX ESP
 local boxConn
 local function clearBoxESP() for _,b in ipairs(boxObjs) do pcall(function() b:Destroy() end) end; boxObjs={} end
 local function startBoxESP()
@@ -239,7 +245,6 @@ local function startBoxESP()
 end
 local function stopBoxESP() if boxConn then boxConn:Disconnect(); boxConn=nil end; clearBoxESP() end
 
--- TRACERS
 local tracerConn
 local function clearTracers() for _,b in ipairs(tracerObjs) do pcall(function() b:Destroy() end) end; tracerObjs={} end
 local function startTracers()
@@ -262,7 +267,6 @@ local function startTracers()
 end
 local function stopTracers() if tracerConn then tracerConn:Disconnect(); tracerConn=nil end; clearTracers() end
 
--- NAME TAGS
 local nameTagConn
 local function clearNameTags() for _,b in ipairs(nameTagObjs) do pcall(function() b:Destroy() end) end; nameTagObjs={} end
 local function addNameTag(p,c)
@@ -272,8 +276,7 @@ local function addNameTag(p,c)
         bg.Size=UDim2.new(0,120,0,28); bg.StudsOffset=Vector3.new(0,3.5,0); bg.AlwaysOnTop=true; bg.Parent=hrpPart
         local l=Instance.new("TextLabel",bg); l.Size=UDim2.new(1,0,1,0); l.BackgroundTransparency=1; l.Text=p.Name
         l.TextColor3=cfg.espColor; l.TextSize=15; l.Font=Enum.Font.GothamBold
-        l.TextStrokeTransparency=0; l.TextStrokeColor3=Color3.new(0,0,0)
-        table.insert(nameTagObjs,bg)
+        l.TextStrokeTransparency=0; l.TextStrokeColor3=Color3.new(0,0,0); table.insert(nameTagObjs,bg)
     end)
 end
 local function startNameTags()
@@ -285,38 +288,26 @@ local function startNameTags()
 end
 local function stopNameTags() clearNameTags(); if nameTagConn then nameTagConn:Disconnect(); nameTagConn=nil end end
 
--- GODMODE
 local function setGodmode(on) local h=hum(); if not h then return end; h.MaxHealth=on and math.huge or 100; h.Health=on and math.huge or 100 end
-
--- FREEZE
 local function setFreeze(on)
     for _,p in ipairs(Players:GetPlayers()) do
         if p~=plr and p.Character then
             local r=p.Character:FindFirstChild("HumanoidRootPart"); if r then
-                if on then
-                    local bp=Instance.new("BodyPosition",r); bp.Name="_GFZ"
-                    bp.Position=r.Position; bp.MaxForce=Vector3.new(1e9,1e9,1e9)
+                if on then local bp=Instance.new("BodyPosition",r); bp.Name="_GFZ"; bp.Position=r.Position; bp.MaxForce=Vector3.new(1e9,1e9,1e9)
                 else local bp=r:FindFirstChild("_GFZ"); if bp then bp:Destroy() end end
             end
         end
     end
 end
-
--- INVISIBLE
 local function setInvisible(on)
     local c=char(); if not c then return end
-    for _,p in ipairs(c:GetDescendants()) do
-        if p:IsA("BasePart") or p:IsA("Decal") then p.LocalTransparencyModifier=on and 1 or 0 end
-    end
+    for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.LocalTransparencyModifier=on and 1 or 0 end end
 end
-
--- FULLBRIGHT
 local function setFullbright(on)
     if on then origAmbient=Lighting.Ambient; origBright=Lighting.Brightness; Lighting.Ambient=Color3.new(1,1,1); Lighting.Brightness=2
     else Lighting.Ambient=origAmbient or Color3.new(0,0,0); Lighting.Brightness=origBright or 1 end
 end
 
--- INF JUMP
 local function startInfJump()
     jumpConn=UserInputService.JumpRequest:Connect(function()
         local h=hum(); if h then h.JumpPower=cfg.jumpPower; h:ChangeState(Enum.HumanoidStateType.Jumping) end
@@ -324,14 +315,12 @@ local function startInfJump()
 end
 local function stopInfJump() if jumpConn then jumpConn:Disconnect(); jumpConn=nil end; local h=hum(); if h then h.JumpPower=50 end end
 
--- ANTI AFK
 local function startAntiAfk()
     local VU=game:GetService("VirtualUser")
     afkConn=plr.Idled:Connect(function() VU:CaptureController(); VU:ClickButton2(Vector2.new()) end)
 end
 local function stopAntiAfk() if afkConn then afkConn:Disconnect(); afkConn=nil end end
 
--- FTP - teleport to mouse
 local function startFTP()
     ftpConn=UserInputService.InputBegan:Connect(function(inp,gp)
         if gp then return end
@@ -355,7 +344,6 @@ local function startFTP()
 end
 local function stopFTP() if ftpConn then ftpConn:Disconnect(); ftpConn=nil end end
 
--- MISC
 local function doHeal() local h=hum(); if h then h.Health=h.MaxHealth end end
 local function doKill() local h=hum(); if h then h.Health=0 end end
 local function doRejoin() game:GetService("TeleportService"):Teleport(game.PlaceId,plr) end
@@ -401,6 +389,28 @@ local function doTeleport(name)
     return false
 end
 
+-- BASEPLATE helper
+local function doCreateBaseplate()
+    local old=workspace:FindFirstChild("TERRAIN_EDITOR"); if old then old:Destroy() end
+    local col=cfg.bpColor
+    local maxPart=2048; local divX=math.ceil(40000/maxPart); local divZ=math.ceil(40000/maxPart)
+    local pSX=40000/divX; local pSZ=40000/divZ
+    local folder=Instance.new("Folder"); folder.Name="TERRAIN_EDITOR"; folder.Parent=workspace
+    for i=0,divX-1 do
+        local ox=(i-(divX/2))*pSX+(pSX/2)
+        for j=0,divZ-1 do
+            local oz=(j-(divZ/2))*pSZ+(pSZ/2)
+            local part=Instance.new("Part"); part.Size=Vector3.new(pSX,5,pSZ)
+            part.Position=Vector3.new(ox,0,oz); part.Anchored=true
+            part.Material=Enum.Material.Asphalt; part.Color=col
+            part.Transparency=0; part.Parent=folder
+        end
+    end
+end
+local function doDestroyBaseplate()
+    local f=workspace:FindFirstChild("TERRAIN_EDITOR"); if f then f:Destroy() end
+end
+
 -- ════════════════════════════════════════════════
 --   GUI CONSTRUCTION
 -- ════════════════════════════════════════════════
@@ -434,16 +444,13 @@ local function textbox(p,ph)
     corner(tb,4); stroke(tb,C(42,0,0)); return tb
 end
 
--- Main window
 local Main=frame(gui,UDim2.new(0,390,0,548),UDim2.new(0.5,-195,1.5,0))
 Main.Active=true; Main.Draggable=true; corner(Main,10); stroke(Main,C(139,0,0),1.5)
-TweenService:Create(Main,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-    {Position=UDim2.new(0.5,-195,0.5,-274)}):Play()
+TweenService:Create(Main,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(0.5,-195,0.5,-274)}):Play()
 
--- Top bar
 local TopBar=frame(Main,UDim2.new(1,0,0,36)); TopBar.BackgroundColor3=C(17,17,17); corner(TopBar,10)
 frame(TopBar,UDim2.new(1,0,0,10),UDim2.new(0,0,1,-10),C(17,17,17))
-local swordLbl=Instance.new("TextLabel",TopBar); swordLbl.Size=UDim2.new(0,24,0,24); swordLbl.Position=UDim2.new(0,8,0.5,-12); swordLbl.BackgroundTransparency=1; swordLbl.Text=""; swordLbl.TextColor3=RED; swordLbl.TextSize=18; swordLbl.Font=Enum.Font.Code
+local swordLbl=Instance.new("TextLabel",TopBar); swordLbl.Size=UDim2.new(0,24,0,24); swordLbl.Position=UDim2.new(0,8,0.5,-12); swordLbl.BackgroundTransparency=1; swordLbl.Text="*"; swordLbl.TextColor3=RED; swordLbl.TextSize=18; swordLbl.Font=Enum.Font.Code
 local nameL=lbl(TopBar,"GLADIATOR",13,C(224,224,224)); nameL.Position=UDim2.new(0,34,0,0); nameL.Size=UDim2.new(0,110,1,0)
 local fpsBadge=frame(TopBar,UDim2.new(0,76,0,20),UDim2.new(1,-185,0.5,-10),C(0,26,0)); corner(fpsBadge,3); stroke(fpsBadge,C(0,139,0))
 local fpsL=lbl(fpsBadge,"FPS 76",11,LIME); fpsL.TextXAlignment=Enum.TextXAlignment.Center
@@ -452,9 +459,8 @@ local pingL=lbl(pingBadge,"PING 25ms",11,C(136,136,136)); pingL.TextXAlignment=E
 local closeBtn=Instance.new("TextButton",TopBar); closeBtn.Size=UDim2.new(0,22,0,22); closeBtn.Position=UDim2.new(1,-30,0.5,-11); closeBtn.BackgroundColor3=C(58,0,0); closeBtn.TextColor3=RED; closeBtn.Text="x"; closeBtn.TextSize=12; closeBtn.Font=Enum.Font.Code; closeBtn.BorderSizePixel=0; corner(closeBtn,4); stroke(closeBtn,C(139,0,0)); closeBtn.AutoButtonColor=false
 closeBtn.MouseButton1Click:Connect(function() Main.Visible=false end)
 
--- Sub bar
 local SubBar=frame(Main,UDim2.new(1,0,0,28),UDim2.new(0,0,0,36),C(15,15,15))
-local swordSub=Instance.new("TextLabel",SubBar); swordSub.Size=UDim2.new(0,100,1,0); swordSub.Position=UDim2.new(0,8,0,0); swordSub.BackgroundTransparency=1; swordSub.Text="  GLADIATOR"; swordSub.TextColor3=RED; swordSub.TextSize=11; swordSub.Font=Enum.Font.Code; swordSub.TextXAlignment=Enum.TextXAlignment.Left
+local swordSub=Instance.new("TextLabel",SubBar); swordSub.Size=UDim2.new(0,100,1,0); swordSub.Position=UDim2.new(0,8,0,0); swordSub.BackgroundTransparency=1; swordSub.Text="* GLADIATOR"; swordSub.TextColor3=RED; swordSub.TextSize=11; swordSub.Font=Enum.Font.Code; swordSub.TextXAlignment=Enum.TextXAlignment.Left
 
 local tabData={{"Cmds","cmds"},{"ESP","esp"},{"Misc","misc"},{"Cfg","cfg"}}
 local tabBtns={}
@@ -465,7 +471,6 @@ for i,td in ipairs(tabData) do
 end
 
 local Body=frame(Main,UDim2.new(1,-24,0,468),UDim2.new(0,12,0,68)); Body.BackgroundTransparency=1
-
 local StatBar=frame(Main,UDim2.new(1,0,0,24),UDim2.new(0,0,1,-24),C(10,10,10))
 frame(StatBar,UDim2.new(1,0,0,1),nil,C(26,0,0))
 local statL=lbl(StatBar,"Ready",10,C(85,85,85)); statL.Position=UDim2.new(0,12,0,0)
@@ -485,7 +490,6 @@ local function makePanelFrame(parent)
     local pad=Instance.new("UIPadding",pf); pad.PaddingTop=UDim.new(0,10); pad.PaddingBottom=UDim.new(0,10); pad.PaddingLeft=UDim.new(0,10); pad.PaddingRight=UDim.new(0,10)
     Instance.new("UIListLayout",pf).Padding=UDim.new(0,8); pf.Visible=false; return pf
 end
-
 local function makeSliderRow(parent,labelTxt,minV,maxV,defaultV,unit,onChange)
     local row=frame(parent,UDim2.new(1,0,0,22),nil); row.BackgroundTransparency=1
     lbl(row,labelTxt,11,C(153,153,153)).Size=UDim2.new(0,75,1,0)
@@ -503,7 +507,6 @@ local function makeSliderRow(parent,labelTxt,minV,maxV,defaultV,unit,onChange)
     end)
     return row
 end
-
 local function makeToggleRow(parent,labelTxt,default,onChange)
     local row=frame(parent,UDim2.new(1,0,0,20),nil); row.BackgroundTransparency=1
     lbl(row,labelTxt,11,C(170,170,170)).Size=UDim2.new(1,-44,1,0)
@@ -512,225 +515,89 @@ local function makeToggleRow(parent,labelTxt,default,onChange)
     tog.MouseButton1Click:Connect(function() isOn=not isOn; refresh(); if onChange then onChange(isOn) end end)
     return row
 end
-
 local function makeSep(parent) return frame(parent,UDim2.new(1,0,0,1),nil,C(31,0,0)) end
 
 -- ════════════════════════════════════════════════
---   TP PLAYER PICKER GUI
+--   TP PICKER GUI
 -- ════════════════════════════════════════════════
 local tpGuiOpen=false
 local function openTPGui()
-    if tpGuiOpen then return end
-    tpGuiOpen=true
-
-    local tpSG=Instance.new("ScreenGui",plr.PlayerGui)
-    tpSG.Name="_GTpGui"; tpSG.ResetOnSpawn=false; tpSG.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
-
-    -- Dimmed backdrop
-    local backdrop=Instance.new("TextButton",tpSG)
-    backdrop.Size=UDim2.new(1,0,1,0); backdrop.BackgroundColor3=C(0,0,0); backdrop.BackgroundTransparency=0.45
-    backdrop.BorderSizePixel=0; backdrop.Text=""; backdrop.AutoButtonColor=false; backdrop.ZIndex=2
-
-    -- Card — tall so the scroll fills nicely
-    local card=Instance.new("Frame",tpSG)
-    card.Size=UDim2.new(0,330,0,460); card.BackgroundColor3=C(10,10,10)
-    card.BorderSizePixel=0; card.Position=UDim2.new(0.5,-165,1.5,0); card.ZIndex=3
-    corner(card,10); stroke(card,C(139,0,0),1.5)
-
-    TweenService:Create(card,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-        {Position=UDim2.new(0.5,-165,0.5,-230)}):Play()
-
-    -- Red accent strip
-    local strip=Instance.new("Frame",card)
-    strip.Size=UDim2.new(1,0,0,4); strip.BackgroundColor3=RED; strip.BorderSizePixel=0; strip.ZIndex=4
-
-    -- Title bar (y=4, h=34)
+    if tpGuiOpen then return end; tpGuiOpen=true
+    local tpSG=Instance.new("ScreenGui",plr.PlayerGui); tpSG.Name="_GTpGui"; tpSG.ResetOnSpawn=false; tpSG.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+    local backdrop=Instance.new("TextButton",tpSG); backdrop.Size=UDim2.new(1,0,1,0); backdrop.BackgroundColor3=C(0,0,0); backdrop.BackgroundTransparency=0.45; backdrop.BorderSizePixel=0; backdrop.Text=""; backdrop.AutoButtonColor=false; backdrop.ZIndex=2
+    local card=Instance.new("Frame",tpSG); card.Size=UDim2.new(0,330,0,460); card.BackgroundColor3=C(10,10,10); card.BorderSizePixel=0; card.Position=UDim2.new(0.5,-165,1.5,0); card.ZIndex=3; corner(card,10); stroke(card,C(139,0,0),1.5)
+    TweenService:Create(card,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(0.5,-165,0.5,-230)}):Play()
+    local strip=Instance.new("Frame",card); strip.Size=UDim2.new(1,0,0,4); strip.BackgroundColor3=RED; strip.BorderSizePixel=0; strip.ZIndex=4
     local topbar=frame(card,UDim2.new(1,0,0,34),UDim2.new(0,0,0,4),C(17,17,17)); topbar.ZIndex=4
-
-    -- Title left
-    local titl=Instance.new("TextLabel",topbar)
-    titl.Size=UDim2.new(1,-80,1,0); titl.Position=UDim2.new(0,12,0,0); titl.BackgroundTransparency=1
-    titl.Text="TELEPORT TO PLAYER"; titl.TextColor3=RED; titl.TextSize=11; titl.Font=Enum.Font.GothamBold
-    titl.TextXAlignment=Enum.TextXAlignment.Left; titl.ZIndex=5
-
-    -- Player count badge (top right)
+    local titl=Instance.new("TextLabel",topbar); titl.Size=UDim2.new(1,-80,1,0); titl.Position=UDim2.new(0,12,0,0); titl.BackgroundTransparency=1; titl.Text="TELEPORT TO PLAYER"; titl.TextColor3=RED; titl.TextSize=11; titl.Font=Enum.Font.GothamBold; titl.TextXAlignment=Enum.TextXAlignment.Left; titl.ZIndex=5
     local countBadge=frame(topbar,UDim2.new(0,44,0,20),UDim2.new(1,-70,0.5,-10),C(26,0,0)); countBadge.ZIndex=5; corner(countBadge,4); stroke(countBadge,C(80,0,0))
     local countTxt=Instance.new("TextLabel",countBadge); countTxt.Size=UDim2.new(1,0,1,0); countTxt.BackgroundTransparency=1; countTxt.TextColor3=RED; countTxt.TextSize=9; countTxt.Font=Enum.Font.GothamBold; countTxt.TextXAlignment=Enum.TextXAlignment.Center; countTxt.ZIndex=6; countTxt.Text="0 players"
-
-    -- Close X
-    local xBtn=Instance.new("TextButton",topbar)
-    xBtn.Size=UDim2.new(0,22,0,22); xBtn.Position=UDim2.new(1,-28,0.5,-11); xBtn.BackgroundColor3=C(58,0,0)
-    xBtn.TextColor3=RED; xBtn.Text="x"; xBtn.TextSize=12; xBtn.Font=Enum.Font.Code
-    xBtn.BorderSizePixel=0; xBtn.AutoButtonColor=false; xBtn.ZIndex=5; corner(xBtn,4); stroke(xBtn,C(139,0,0))
-
+    local xBtn=Instance.new("TextButton",topbar); xBtn.Size=UDim2.new(0,22,0,22); xBtn.Position=UDim2.new(1,-28,0.5,-11); xBtn.BackgroundColor3=C(58,0,0); xBtn.TextColor3=RED; xBtn.Text="x"; xBtn.TextSize=12; xBtn.Font=Enum.Font.Code; xBtn.BorderSizePixel=0; xBtn.AutoButtonColor=false; xBtn.ZIndex=5; corner(xBtn,4); stroke(xBtn,C(139,0,0))
     local refreshConn
     local function closeGui()
-        tpGuiOpen=false
-        if refreshConn then refreshConn:Disconnect() end
-        TweenService:Create(card,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.In),
-            {Position=UDim2.new(0.5,-165,1.5,0)}):Play()
+        tpGuiOpen=false; if refreshConn then refreshConn:Disconnect() end
+        TweenService:Create(card,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.In),{Position=UDim2.new(0.5,-165,1.5,0)}):Play()
         task.delay(0.3,function() tpSG:Destroy() end)
     end
-    xBtn.MouseButton1Click:Connect(closeGui)
-    backdrop.MouseButton1Click:Connect(closeGui)
-
-    -- Search bar (y=44, h=30)
+    xBtn.MouseButton1Click:Connect(closeGui); backdrop.MouseButton1Click:Connect(closeGui)
     local srchWrap=frame(card,UDim2.new(1,-24,0,30),UDim2.new(0,12,0,44),C(20,20,20)); srchWrap.ZIndex=4; corner(srchWrap,6); stroke(srchWrap,C(50,0,0))
     local magLbl=Instance.new("TextLabel",srchWrap); magLbl.Size=UDim2.new(0,22,1,0); magLbl.BackgroundTransparency=1; magLbl.Text="~"; magLbl.TextColor3=C(80,80,80); magLbl.TextSize=13; magLbl.Font=Enum.Font.GothamBold; magLbl.TextXAlignment=Enum.TextXAlignment.Center; magLbl.ZIndex=5
-    local srch=Instance.new("TextBox",srchWrap)
-    srch.Size=UDim2.new(1,-26,1,0); srch.Position=UDim2.new(0,24,0,0)
-    srch.BackgroundTransparency=1; srch.PlaceholderText="Search by name..."
-    srch.PlaceholderColor3=C(55,55,55); srch.Text=""; srch.TextColor3=C(210,210,210)
-    srch.TextSize=11; srch.Font=Enum.Font.Code; srch.ClearTextOnFocus=false; srch.BorderSizePixel=0; srch.ZIndex=5
-
-    -- Thin divider (y=80)
+    local srch=Instance.new("TextBox",srchWrap); srch.Size=UDim2.new(1,-26,1,0); srch.Position=UDim2.new(0,24,0,0); srch.BackgroundTransparency=1; srch.PlaceholderText="Search by name..."; srch.PlaceholderColor3=C(55,55,55); srch.Text=""; srch.TextColor3=C(210,210,210); srch.TextSize=11; srch.Font=Enum.Font.Code; srch.ClearTextOnFocus=false; srch.BorderSizePixel=0; srch.ZIndex=5
     frame(card,UDim2.new(1,-24,0,1),UDim2.new(0,12,0,80),C(30,0,0)).ZIndex=4
-
-    -- Scrolling list — takes the rest of the card height above the result label
-    -- layout: y=86 to y=432 = 346px scroll area
-    local listScroll=Instance.new("ScrollingFrame",card)
-    listScroll.Size=UDim2.new(1,-18,0,346); listScroll.Position=UDim2.new(0,8,0,86)
-    listScroll.BackgroundTransparency=1; listScroll.BorderSizePixel=0
-    listScroll.ScrollBarThickness=4; listScroll.ScrollBarImageColor3=C(100,0,0)
-    listScroll.CanvasSize=UDim2.new(0,0,0,0); listScroll.AutomaticCanvasSize=Enum.AutomaticSize.Y
-    listScroll.ZIndex=4; listScroll.ScrollingDirection=Enum.ScrollingDirection.Y
-    local listLayout=Instance.new("UIListLayout",listScroll)
-    listLayout.Padding=UDim.new(0,3); listLayout.SortOrder=Enum.SortOrder.LayoutOrder
+    local listScroll=Instance.new("ScrollingFrame",card); listScroll.Size=UDim2.new(1,-18,0,346); listScroll.Position=UDim2.new(0,8,0,86); listScroll.BackgroundTransparency=1; listScroll.BorderSizePixel=0; listScroll.ScrollBarThickness=4; listScroll.ScrollBarImageColor3=C(100,0,0); listScroll.CanvasSize=UDim2.new(0,0,0,0); listScroll.AutomaticCanvasSize=Enum.AutomaticSize.Y; listScroll.ZIndex=4; listScroll.ScrollingDirection=Enum.ScrollingDirection.Y
+    local listLayout=Instance.new("UIListLayout",listScroll); listLayout.Padding=UDim.new(0,3); listLayout.SortOrder=Enum.SortOrder.LayoutOrder
     Instance.new("UIPadding",listScroll).PaddingLeft=UDim.new(0,4)
+    local resLbl=Instance.new("TextLabel",card); resLbl.Size=UDim2.new(1,-24,0,22); resLbl.Position=UDim2.new(0,12,1,-26); resLbl.BackgroundTransparency=1; resLbl.Text="Click a player to teleport"; resLbl.TextColor3=C(55,55,55); resLbl.TextSize=10; resLbl.Font=Enum.Font.Code; resLbl.TextXAlignment=Enum.TextXAlignment.Center; resLbl.ZIndex=4
 
-    -- Result status at very bottom
-    local resLbl=Instance.new("TextLabel",card)
-    resLbl.Size=UDim2.new(1,-24,0,22); resLbl.Position=UDim2.new(0,12,1,-26)
-    resLbl.BackgroundTransparency=1; resLbl.Text="Click a player to teleport"
-    resLbl.TextColor3=C(55,55,55); resLbl.TextSize=10; resLbl.Font=Enum.Font.Code
-    resLbl.TextXAlignment=Enum.TextXAlignment.Center; resLbl.ZIndex=4
-
-
-    -- Build / refresh the player list
     local function buildList(filter)
-        -- Wipe old rows
-        for _,ch in ipairs(listScroll:GetChildren()) do
-            if ch:IsA("Frame") or ch:IsA("TextLabel") then ch:Destroy() end
-        end
-
-        -- Grab every player in the server right now
-        local everyone = Players:GetPlayers()
-
-        -- Update player count badge (excluding self)
-        local othersCount = 0
+        for _,ch in ipairs(listScroll:GetChildren()) do if ch:IsA("Frame") or ch:IsA("TextLabel") then ch:Destroy() end end
+        local everyone=Players:GetPlayers()
+        local othersCount=0
+        for _,p in ipairs(everyone) do if p.UserId~=plr.UserId then othersCount+=1 end end
+        countTxt.Text=othersCount..(othersCount==1 and " player" or " players")
+        local displayList={}
         for _,p in ipairs(everyone) do
-            if p.UserId ~= plr.UserId then othersCount += 1 end
-        end
-        countTxt.Text = othersCount .. (othersCount == 1 and " player" or " players")
-
-        -- Build the display list: every player except self, filtered by search
-        local displayList = {}
-        for _,p in ipairs(everyone) do
-            if p.UserId ~= plr.UserId then
-                local nameMatch = (filter == "") or (p.Name:lower():find(filter:lower(), 1, true) ~= nil)
-                if nameMatch then
-                    table.insert(displayList, p)
-                end
+            if p.UserId~=plr.UserId then
+                if filter=="" or p.Name:lower():find(filter:lower(),1,true)~=nil then table.insert(displayList,p) end
             end
         end
-
-        -- Empty state
-        if #displayList == 0 then
-            local none = Instance.new("TextLabel", listScroll)
-            none.Size = UDim2.new(1,0,0,60); none.BackgroundTransparency = 1
-            none.Text = othersCount == 0 and "No other players in this server" or ('No players match "'..filter..'"')
-            none.TextColor3 = C(50,50,50); none.TextSize = 11; none.Font = Enum.Font.Code
-            none.TextXAlignment = Enum.TextXAlignment.Center; none.TextWrapped = true; none.ZIndex = 5
-            return
+        if #displayList==0 then
+            local none=Instance.new("TextLabel",listScroll); none.Size=UDim2.new(1,0,0,60); none.BackgroundTransparency=1
+            none.Text=othersCount==0 and "No other players in this server" or ('No players match "'..filter..'"')
+            none.TextColor3=C(50,50,50); none.TextSize=11; none.Font=Enum.Font.Code; none.TextXAlignment=Enum.TextXAlignment.Center; none.TextWrapped=true; none.ZIndex=5; return
         end
-
-        -- Build a row for EVERY player in displayList
-        for i, p in ipairs(displayList) do
-            local row = Instance.new("Frame", listScroll)
-            row.Size = UDim2.new(1,-6,0,50); row.BackgroundColor3 = C(17,17,17)
-            row.BorderSizePixel = 0; row.LayoutOrder = i; row.ZIndex = 5
-            corner(row,6); stroke(row,C(28,0,0))
-
-            -- Initial circle
-            local circle = frame(row,UDim2.new(0,34,0,34),UDim2.new(0,7,0.5,-17),C(42,0,0))
-            circle.ZIndex = 6; corner(circle,99); stroke(circle,C(139,0,0),1)
-            local initL = Instance.new("TextLabel",circle)
-            initL.Size = UDim2.new(1,0,1,0); initL.BackgroundTransparency = 1
-            initL.Text = p.Name:sub(1,1):upper(); initL.TextColor3 = RED
-            initL.TextSize = 15; initL.Font = Enum.Font.GothamBold
-            initL.TextXAlignment = Enum.TextXAlignment.Center; initL.ZIndex = 7
-
-            -- Name label
-            local nameLbl = Instance.new("TextLabel",row)
-            nameLbl.Size = UDim2.new(1,-106,0,18); nameLbl.Position = UDim2.new(0,48,0,7)
-            nameLbl.BackgroundTransparency = 1; nameLbl.Text = p.Name
-            nameLbl.TextColor3 = C(215,215,215); nameLbl.TextSize = 11; nameLbl.Font = Enum.Font.GothamBold
-            nameLbl.TextXAlignment = Enum.TextXAlignment.Left; nameLbl.ZIndex = 6
-
-            -- Distance label
-            local myHRP = hrp()
-            local pHRP = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
-            local distStr = (myHRP and pHRP)
-                and (math.floor((pHRP.Position - myHRP.Position).Magnitude) .. " studs")
-                or "loading..."
-            local distLbl = Instance.new("TextLabel",row)
-            distLbl.Size = UDim2.new(1,-106,0,14); distLbl.Position = UDim2.new(0,48,0,26)
-            distLbl.BackgroundTransparency = 1; distLbl.Text = distStr
-            distLbl.TextColor3 = C(65,65,65); distLbl.TextSize = 10; distLbl.Font = Enum.Font.Code
-            distLbl.TextXAlignment = Enum.TextXAlignment.Left; distLbl.ZIndex = 6
-
-            -- TP button
-            local tBtn = Instance.new("TextButton",row)
-            tBtn.Size = UDim2.new(0,72,0,28); tBtn.Position = UDim2.new(1,-78,0.5,-14)
-            tBtn.BackgroundColor3 = C(139,0,0); tBtn.TextColor3 = C(255,255,255)
-            tBtn.Text = "TP"; tBtn.TextSize = 11; tBtn.Font = Enum.Font.GothamBold
-            tBtn.BorderSizePixel = 0; tBtn.AutoButtonColor = false; tBtn.ZIndex = 6
-            corner(tBtn,5); stroke(tBtn,C(192,57,43))
-
-            tBtn.MouseEnter:Connect(function() tBtn.BackgroundColor3 = C(192,57,43) end)
-            tBtn.MouseLeave:Connect(function() tBtn.BackgroundColor3 = C(139,0,0) end)
-            row.MouseEnter:Connect(function() row.BackgroundColor3 = C(22,0,0) end)
-            row.MouseLeave:Connect(function() row.BackgroundColor3 = C(17,17,17) end)
-
-            -- Capture p in local scope so the closure is correct per-row
-            local targetPlayer = p
+        for i,p in ipairs(displayList) do
+            local row=Instance.new("Frame",listScroll); row.Size=UDim2.new(1,-6,0,50); row.BackgroundColor3=C(17,17,17); row.BorderSizePixel=0; row.LayoutOrder=i; row.ZIndex=5; corner(row,6); stroke(row,C(28,0,0))
+            local circle=frame(row,UDim2.new(0,34,0,34),UDim2.new(0,7,0.5,-17),C(42,0,0)); circle.ZIndex=6; corner(circle,99); stroke(circle,C(139,0,0),1)
+            local initL=Instance.new("TextLabel",circle); initL.Size=UDim2.new(1,0,1,0); initL.BackgroundTransparency=1; initL.Text=p.Name:sub(1,1):upper(); initL.TextColor3=RED; initL.TextSize=15; initL.Font=Enum.Font.GothamBold; initL.TextXAlignment=Enum.TextXAlignment.Center; initL.ZIndex=7
+            local nameLbl=Instance.new("TextLabel",row); nameLbl.Size=UDim2.new(1,-106,0,18); nameLbl.Position=UDim2.new(0,48,0,7); nameLbl.BackgroundTransparency=1; nameLbl.Text=p.Name; nameLbl.TextColor3=C(215,215,215); nameLbl.TextSize=11; nameLbl.Font=Enum.Font.GothamBold; nameLbl.TextXAlignment=Enum.TextXAlignment.Left; nameLbl.ZIndex=6
+            local myHRP=hrp(); local pHRP=p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+            local distStr=(myHRP and pHRP) and (math.floor((pHRP.Position-myHRP.Position).Magnitude).." studs") or "loading..."
+            local distLbl=Instance.new("TextLabel",row); distLbl.Size=UDim2.new(1,-106,0,14); distLbl.Position=UDim2.new(0,48,0,26); distLbl.BackgroundTransparency=1; distLbl.Text=distStr; distLbl.TextColor3=C(65,65,65); distLbl.TextSize=10; distLbl.Font=Enum.Font.Code; distLbl.TextXAlignment=Enum.TextXAlignment.Left; distLbl.ZIndex=6
+            local tBtn=Instance.new("TextButton",row); tBtn.Size=UDim2.new(0,72,0,28); tBtn.Position=UDim2.new(1,-78,0.5,-14); tBtn.BackgroundColor3=C(139,0,0); tBtn.TextColor3=C(255,255,255); tBtn.Text="TP"; tBtn.TextSize=11; tBtn.Font=Enum.Font.GothamBold; tBtn.BorderSizePixel=0; tBtn.AutoButtonColor=false; tBtn.ZIndex=6; corner(tBtn,5); stroke(tBtn,C(192,57,43))
+            tBtn.MouseEnter:Connect(function() tBtn.BackgroundColor3=C(192,57,43) end)
+            tBtn.MouseLeave:Connect(function() tBtn.BackgroundColor3=C(139,0,0) end)
+            row.MouseEnter:Connect(function() row.BackgroundColor3=C(22,0,0) end)
+            row.MouseLeave:Connect(function() row.BackgroundColor3=C(17,17,17) end)
+            local targetPlayer=p
             local function execTP()
-                local r = hrp()
-                local tr = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local r=hrp(); local tr=targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if r and tr then
-                    r.CFrame = tr.CFrame + Vector3.new(3,0,0)
-                    resLbl.Text = "Teleported to " .. targetPlayer.Name
-                    resLbl.TextColor3 = C(34,204,85)
-                    tBtn.BackgroundColor3 = C(0,130,55)
-                    task.delay(0.8, function() tBtn.BackgroundColor3 = C(139,0,0) end)
-                    setStatus("Teleported to " .. targetPlayer.Name, true)
-                    notify("Teleported to " .. targetPlayer.Name)
-                    task.delay(3, function()
-                        resLbl.Text = "Click a player to teleport"
-                        resLbl.TextColor3 = C(55,55,55)
-                    end)
-                else
-                    resLbl.Text = targetPlayer.Name .. " has no character yet"
-                    resLbl.TextColor3 = C(192,57,43)
-                end
+                    r.CFrame=tr.CFrame+Vector3.new(3,0,0)
+                    resLbl.Text="Teleported to "..targetPlayer.Name; resLbl.TextColor3=C(34,204,85)
+                    tBtn.BackgroundColor3=C(0,130,55); task.delay(0.8,function() tBtn.BackgroundColor3=C(139,0,0) end)
+                    setStatus("Teleported to "..targetPlayer.Name,true); notify("Teleported to "..targetPlayer.Name)
+                    task.delay(3,function() resLbl.Text="Click a player to teleport"; resLbl.TextColor3=C(55,55,55) end)
+                else resLbl.Text=targetPlayer.Name.." has no character yet"; resLbl.TextColor3=C(192,57,43) end
             end
-            tBtn.MouseButton1Click:Connect(execTP)
-            row.MouseButton1Click:Connect(execTP)
+            tBtn.MouseButton1Click:Connect(execTP); row.MouseButton1Click:Connect(execTP)
         end
     end
-
-
-    buildList("")
-    srch:GetPropertyChangedSignal("Text"):Connect(function() buildList(srch.Text) end)
-
-    -- Auto-refresh distances + detect players joining/leaving every 2s
+    buildList(""); srch:GetPropertyChangedSignal("Text"):Connect(function() buildList(srch.Text) end)
     local lastRefresh=tick()
-    refreshConn=RunService.Heartbeat:Connect(function()
-        if tick()-lastRefresh>=2 then lastRefresh=tick(); buildList(srch.Text) end
-    end)
+    refreshConn=RunService.Heartbeat:Connect(function() if tick()-lastRefresh>=2 then lastRefresh=tick(); buildList(srch.Text) end end)
 end
 
--- ─── COMING SOON POPUP ───────────────────────────
 local function showComingSoon(msg)
     local popup=Instance.new("ScreenGui",plr.PlayerGui); popup.Name="_GCSPopup"; popup.ResetOnSpawn=false
     local pf=frame(popup,UDim2.new(0,340,0,80),UDim2.new(0.5,-170,0.5,-40),C(10,10,10)); corner(pf,10); stroke(pf,RED,2)
@@ -749,138 +616,193 @@ local scroll=Instance.new("ScrollingFrame",tCmds); scroll.Size=UDim2.new(1,0,0,3
 Instance.new("UIListLayout",scroll).Padding=UDim.new(0,3)
 
 local cmdDefs={
+    -- ── TOGGLES ──────────────────────────────────────────────────
     {n=".fly",tag="TOG",desc="Fly mode",key="fly",
-     buildPanel=function(pf) makeSliderRow(pf,"Fly Speed",10,200,50,"",function(v) cfg.flySpeed=v end); makeSliderRow(pf,"Boost Mult",1,5,2,"x",function(v) cfg.flyBoost=v end); makeToggleRow(pf,"Auto-hover",false,function(v) cfg.hover=v end) end,
+     buildPanel=function(pf) makeSliderRow(pf,"Fly Speed",10,200,50,"",function(v) cfg.flySpeed=v end); makeSliderRow(pf,"Boost",1,5,2,"x",function(v) cfg.flyBoost=v end); makeToggleRow(pf,"Auto-hover",false,function(v) cfg.hover=v end) end,
      onEnable=startFly,onDisable=stopFly},
     {n=".speed",tag="TOG",desc="Walk speed",key="speed",
-     buildPanel=function(pf) makeSliderRow(pf,"Walk Speed",16,300,100,"",function(v) cfg.walkSpeed=v; if S.speed then applySpeed(true) end end); makeSliderRow(pf,"Sprint Mult",1,5,2,"x",function(v) cfg.sprintMult=v end) end,
+     buildPanel=function(pf) makeSliderRow(pf,"Walk Speed",16,300,100,"",function(v) cfg.walkSpeed=v; if S.speed then applySpeed(true) end end) end,
      onEnable=function() applySpeed(true) end,onDisable=function() applySpeed(false) end},
     {n=".noclip",tag="TOG",desc="No collision",key="noclip",onEnable=startNoclip,onDisable=stopNoclip},
-    {n=".aimlock",tag="TOG",desc="Aim assist",key="aimlock",
-     buildPanel=function(pf) makeSliderRow(pf,"FOV",10,180,60,"deg",function(v) cfg.aimFOV=v end); makeSliderRow(pf,"Smooth",1,20,5,"",function(v) cfg.aimSmooth=v end); makeToggleRow(pf,"Head target",true,function(v) cfg.aimHead=v end); makeToggleRow(pf,"Team check",true,function(v) cfg.aimTeam=v end) end,
+    {n=".aimlock",tag="TOG",desc="Aim assist (hold RMB)",key="aimlock",
+     buildPanel=function(pf) makeSliderRow(pf,"FOV",10,180,60,"deg",function(v) cfg.aimFOV=v end); makeSliderRow(pf,"Smooth",1,20,5,"",function(v) cfg.aimSmooth=v end); makeToggleRow(pf,"Head target",true,function(v) cfg.aimHead=v end) end,
      onEnable=startAimlock,onDisable=stopAimlock},
-    {n=".esp",tag="TOG",desc="Player ESP",key="esp",onEnable=function() refreshESP() end,onDisable=function() refreshESP() end},
-    {n=".godmode",tag="TOG",desc="Inf health",key="godmode",onEnable=function() setGodmode(true) end,onDisable=function() setGodmode(false) end},
-    {n=".freeze",tag="TOG",desc="Freeze others",key="freeze",onEnable=function() setFreeze(true) end,onDisable=function() setFreeze(false) end},
-    {n=".invisible",tag="TOG",desc="Hide character",key="invisible",onEnable=function() setInvisible(true) end,onDisable=function() setInvisible(false) end},
+    {n=".esp",tag="TOG",desc="Player highlight ESP",key="esp",onEnable=function() refreshESP() end,onDisable=function() refreshESP() end},
+    {n=".godmode",tag="TOG",desc="Infinite health",key="godmode",onEnable=function() setGodmode(true) end,onDisable=function() setGodmode(false) end},
+    {n=".freeze",tag="TOG",desc="Freeze other players",key="freeze",onEnable=function() setFreeze(true) end,onDisable=function() setFreeze(false) end},
+    {n=".invisible",tag="TOG",desc="Hide your character",key="invisible",onEnable=function() setInvisible(true) end,onDisable=function() setInvisible(false) end},
     {n=".fullbright",tag="TOG",desc="Max lighting",key="fullbright",onEnable=function() setFullbright(true) end,onDisable=function() setFullbright(false) end},
     {n=".inf_jump",tag="TOG",desc="Infinite jump",key="inf_jump",
      buildPanel=function(pf) makeSliderRow(pf,"Jump Power",50,500,100,"",function(v) cfg.jumpPower=v end) end,
      onEnable=startInfJump,onDisable=stopInfJump},
-    {n=".antiafk",tag="TOG",desc="No AFK kick",key="antiafk",onEnable=startAntiAfk,onDisable=stopAntiAfk},
-    {n=".ftp",tag="TOG",desc="F = mouse teleport",key="ftp",
-     buildPanel=function(pf)
-        local info=Instance.new("TextLabel",pf); info.Size=UDim2.new(1,0,0,32); info.BackgroundTransparency=1
-        info.Text="Press F to teleport to your mouse cursor position"
-        info.TextColor3=C(153,153,153); info.TextSize=11; info.Font=Enum.Font.Code; info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
-     end,onEnable=startFTP,onDisable=stopFTP},
-    {n=".zoom",tag="ACT",desc="Max zoom out",
-     buildPanel=function(pf)
-        makeSliderRow(pf,"Zoom Dist",50,1000,500,"",function(v) cfg.zoom=v end)
-        local rb=mkbtn(pf,"APPLY",11,RED); rb.Size=UDim2.new(1,0,0,22); rb.MouseButton1Click:Connect(function() doZoom(); setStatus("Zoom set to "..cfg.zoom,true) end)
-     end,action=doZoom},
-    {n=".chat_spam",tag="ACT",desc="Spam chat",
-     buildPanel=function(pf)
-        local r1=frame(pf,UDim2.new(1,0,0,22),nil); r1.BackgroundTransparency=1; lbl(r1,"Message",11,C(153,153,153)).Size=UDim2.new(0,58,1,0)
-        local mt=textbox(r1,"GLADIATOR..."); mt.Size=UDim2.new(1,-62,1,0); mt.Position=UDim2.new(0,62,0,0); mt:GetPropertyChangedSignal("Text"):Connect(function() cfg.spamMsg=mt.Text end)
-        makeSliderRow(pf,"Count",1,20,5,"",function(v) cfg.spamCount=v end)
-        local sb=mkbtn(pf,"SPAM",11,RED); sb.Size=UDim2.new(1,0,0,22); sb.MouseButton1Click:Connect(function() doChatSpam(cfg.spamMsg~="" and cfg.spamMsg or "GLADIATOR",cfg.spamCount); setStatus("Spammed x"..cfg.spamCount,true) end)
-     end,action=function() doChatSpam(cfg.spamMsg,cfg.spamCount) end},
-    {n=".tp",tag="ACT",desc="Teleport picker",action=function() openTPGui() end},
-    {n=".heal",tag="ACT",desc="Full health",action=function() doHeal(); setStatus("Healed!",true) end},
-    {n=".kill",tag="ACT",desc="Kill self",action=function() doKill(); setStatus("RIP",false) end},
-    {n=".rejoin",tag="ACT",desc="Rejoin server",action=function() doRejoin() end},
-    {n=".fps_boost",tag="ACT",desc="Low graphics",action=function() doFPSBoost(); setStatus("Graphics lowered",true) end},
-    {n=".gladre",tag="ACT",desc="Reset in place",action=function() doGladRe(); setStatus("Character reset in place",true) end},
-    {n=".gladanim",tag="SOON",desc="Animations",action=function() showComingSoon("ANIMATIONS COMINGGG SOONN!!!") end},
-    {n=".facebang",tag="ACT",desc="Face bang nearest player",action=function()
-        setStatus("Loading facebang...",true)
-        pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/EnterpriseExperience/bruhlolw/refs/heads/main/face_bang_script.lua"))()
-        end)
-        setStatus("Facebang active!",true); notify(".facebang activated")
-    end},
-    {n=".headsit",tag="TOG",desc="Sit on head (X to toggle)",key="headsit",
+    {n=".antiafk",tag="TOG",desc="Prevent AFK kick",key="antiafk",onEnable=startAntiAfk,onDisable=stopAntiAfk},
+    {n=".ftp",tag="TOG",desc="F key = teleport to mouse",key="ftp",
      buildPanel=function(pf)
         local info=Instance.new("TextLabel",pf); info.Size=UDim2.new(1,0,0,28); info.BackgroundTransparency=1
-        info.Text="Press X to sit/unsit on nearest player's head"; info.TextColor3=C(153,153,153); info.TextSize=11; info.Font=Enum.Font.Code; info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
+        info.Text="Enable then press F to teleport to where your mouse is pointing"
+        info.TextColor3=C(153,153,153); info.TextSize=11; info.Font=Enum.Font.Code; info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
+     end,onEnable=startFTP,onDisable=stopFTP},
+
+    -- .headsit — exact logic from provided reference
+    {n=".headsit",tag="TOG",desc="Sit on head, press X",key="headsit",
+     buildPanel=function(pf)
+        local info=Instance.new("TextLabel",pf); info.Size=UDim2.new(1,0,0,28); info.BackgroundTransparency=1
+        info.Text="Enable then press X near a player to sit on their head. Press X again to stop."
+        info.TextColor3=C(153,153,153); info.TextSize=11; info.Font=Enum.Font.Code; info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
      end,
      onEnable=function()
-        -- Head sit logic
-        local sitting=false; local hbConn2,inputConn2
-        local function loadChar2()
-            local c=plr.Character or plr.CharacterAdded:Wait()
-            local h=c:WaitForChild("HumanoidRootPart"); local hm=c:WaitForChild("Humanoid")
-            return c,h,hm
+        local hsChar,hsHRP,hsHum
+        local hsSitting=false
+        local hsHBConn,hsInputConn
+
+        local function hsLoadChar()
+            hsChar=plr.Character or plr.CharacterAdded:Wait()
+            hsHRP=hsChar:WaitForChild("HumanoidRootPart")
+            hsHum=hsChar:WaitForChild("Humanoid")
         end
-        local function getNearestHead()
-            local c2,h2=loadChar2()
+        local function hsGetNearest()
             local closest,shortest=nil,math.huge
+            local myPos=hsHRP and hsHRP.Position; if not myPos then return nil end
             for _,p in ipairs(Players:GetPlayers()) do
                 if p~=plr and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local d=(p.Character.HumanoidRootPart.Position-h2.Position).Magnitude
-                    if d<shortest then shortest=d; closest=p.Character.HumanoidRootPart end
+                    local dist=(p.Character.HumanoidRootPart.Position-myPos).Magnitude
+                    if dist<shortest then shortest=dist; closest=p.Character.HumanoidRootPart end
                 end
             end
             return closest
         end
-        local function stopSit2()
-            sitting=false
-            if hbConn2 then hbConn2:Disconnect(); hbConn2=nil end
-            local c2,h2,hm2=loadChar2()
-            if hm2 then hm2.Sit=false end
-            if h2 then
-                h2.Velocity=Vector3.zero; h2.RotVelocity=Vector3.zero
-                local rp=RaycastParams.new(); rp.FilterDescendantsInstances={c2}; rp.FilterType=Enum.RaycastFilterType.Exclude
-                local hit=workspace:Raycast(h2.Position,Vector3.new(0,-100,0),rp)
-                h2.CFrame=hit and CFrame.new(hit.Position+Vector3.new(0,3,0)) or h2.CFrame-Vector3.new(0,5,0)
+        local function hsStopSit()
+            hsSitting=false
+            if hsHBConn then hsHBConn:Disconnect(); hsHBConn=nil end
+            if hsHum then hsHum.Sit=false end
+            if hsHRP then
+                hsHRP.Velocity=Vector3.zero; hsHRP.RotVelocity=Vector3.zero
+                local params=RaycastParams.new()
+                params.FilterDescendantsInstances={hsChar}
+                params.FilterType=Enum.RaycastFilterType.Exclude
+                local hit=workspace:Raycast(hsHRP.Position,Vector3.new(0,-100,0),params)
+                hsHRP.CFrame=hit and CFrame.new(hit.Position+Vector3.new(0,3,0)) or (hsHRP.CFrame-Vector3.new(0,5,0))
             end
         end
-        local function startSit2()
-            local target=getNearestHead(); if not target then return end
-            local c2,h2,hm2=loadChar2(); sitting=true; hm2.Sit=true
-            if hbConn2 then hbConn2:Disconnect() end
-            hbConn2=RunService.Heartbeat:Connect(function()
-                if not sitting or not target.Parent then stopSit2(); return end
-                local _,h3,hm3=loadChar2(); hm3.Sit=true
-                h3.CFrame=target.CFrame*CFrame.new(0,3,0); h3.Velocity=Vector3.zero; h3.RotVelocity=Vector3.zero
+        local function hsStartSit()
+            local target=hsGetNearest(); if not target then return end
+            hsSitting=true; hsHum.Sit=true
+            if hsHBConn then hsHBConn:Disconnect() end
+            hsHBConn=RunService.Heartbeat:Connect(function()
+                if not hsSitting or not target.Parent then hsStopSit(); return end
+                hsHum.Sit=true
+                hsHRP.CFrame=target.CFrame*CFrame.new(0,3,0)
+                hsHRP.Velocity=Vector3.zero; hsHRP.RotVelocity=Vector3.zero
             end)
         end
-        if inputConn2 then inputConn2:Disconnect() end
-        inputConn2=UserInputService.InputBegan:Connect(function(input,processed)
-            if processed or not S.headsit then inputConn2:Disconnect(); return end
-            if input.KeyCode==Enum.KeyCode.X then if sitting then stopSit2() else startSit2() end end
+        hsLoadChar()
+        if hsInputConn then hsInputConn:Disconnect() end
+        hsInputConn=UserInputService.InputBegan:Connect(function(input,processed)
+            if processed then return end
+            if not S.headsit then hsInputConn:Disconnect(); return end
+            if input.KeyCode==Enum.KeyCode.X then
+                if hsSitting then hsStopSit() else hsStartSit() end
+            end
         end)
+        plr.CharacterAdded:Connect(function() task.wait(1); hsLoadChar() end)
         notify(".headsit ON — press X near a player")
      end,
-     onDisable=function()
-        S.headsit=false; notify(".headsit OFF")
-     end},
-    {n=".jerkoff",tag="TOG",desc="Jerk animation toggle",key="jerkoff",
+     onDisable=function() notify(".headsit OFF") end},
+
+    -- .jerkoff — exact logic from provided reference
+    {n=".jerkoff",tag="TOG",desc="Jerk animation loop",key="jerkoff",
      buildPanel=function(pf)
-        makeSliderRow(pf,"Anim Speed",2,30,6,"x0.1",function(v) cfg.jerkSpeed=v/10 end)
-        local info2=Instance.new("TextLabel",pf); info2.Size=UDim2.new(1,0,0,18); info2.BackgroundTransparency=1
-        info2.Text="Uses animation id 698251653"; info2.TextColor3=C(100,100,100); info2.TextSize=10; info2.Font=Enum.Font.Code; info2.TextXAlignment=Enum.TextXAlignment.Left
+        makeSliderRow(pf,"Jerk Speed",2,30,6,"x0.1",function(v)
+            cfg.jerkingSpeed=v/10
+            if cfg._jerkTrack then cfg._jerkTrack:AdjustSpeed(cfg.jerkingSpeed) end
+        end)
+        local info2=Instance.new("TextLabel",pf); info2.Size=UDim2.new(1,0,0,14); info2.BackgroundTransparency=1
+        info2.Text="anim: 698251653"; info2.TextColor3=C(80,80,80); info2.TextSize=10; info2.Font=Enum.Font.Code; info2.TextXAlignment=Enum.TextXAlignment.Left
      end,
      onEnable=function()
-        cfg.jerkSpeed=cfg.jerkSpeed or 0.6
+        cfg.jerkingEnabled=true
+        if cfg._jerkTrack and cfg._jerkTrack.IsPlaying then return end
         local c=plr.Character or plr.CharacterAdded:Wait()
-        local hm=c:FindFirstChildOfClass("Humanoid"); if not hm then return end
-        local anim=Instance.new("Animation"); anim.AnimationId="rbxassetid://698251653"
-        local track=hm:LoadAnimation(anim)
-        cfg._jerkTrack=track; cfg._jerkAnim=anim
+        local humanoid=c:FindFirstChildOfClass("Humanoid"); if not humanoid then return end
+        local jerkAnim=Instance.new("Animation"); jerkAnim.AnimationId="rbxassetid://698251653"
+        local jerkTrack=humanoid:LoadAnimation(jerkAnim)
+        cfg._jerkTrack=jerkTrack; cfg._jerkAnim=jerkAnim
         task.spawn(function()
-            while S.jerkoff and track do
-                track:Play(); track:AdjustSpeed(cfg.jerkSpeed); track.TimePosition=0.6; task.wait(0.1)
+            while cfg.jerkingEnabled and cfg._jerkTrack do
+                cfg._jerkTrack:Play()
+                cfg._jerkTrack:AdjustSpeed(cfg.jerkingSpeed)
+                cfg._jerkTrack.TimePosition=cfg.jerkTimePosition
+                task.wait(0.1)
             end
         end)
         notify(".jerkoff ON")
      end,
      onDisable=function()
+        cfg.jerkingEnabled=false
         if cfg._jerkTrack then cfg._jerkTrack:Stop(); cfg._jerkTrack=nil end
         if cfg._jerkAnim then cfg._jerkAnim:Destroy(); cfg._jerkAnim=nil end
         notify(".jerkoff OFF")
      end},
+
+    -- ── ACTIONS ──────────────────────────────────────────────────
+    {n=".zoom",tag="ACT",desc="Set max zoom distance",
+     buildPanel=function(pf)
+        makeSliderRow(pf,"Zoom Dist",50,1000,500,"",function(v) cfg.zoom=v end)
+        local rb=mkbtn(pf,"APPLY",11,RED); rb.Size=UDim2.new(1,0,0,22); rb.MouseButton1Click:Connect(function() doZoom(); setStatus("Zoom "..cfg.zoom,true) end)
+     end,action=doZoom},
+    {n=".chat_spam",tag="ACT",desc="Spam the chat",
+     buildPanel=function(pf)
+        local r1=frame(pf,UDim2.new(1,0,0,22),nil); r1.BackgroundTransparency=1; lbl(r1,"Msg",11,C(153,153,153)).Size=UDim2.new(0,28,1,0)
+        local mt=textbox(r1,"GLADIATOR..."); mt.Size=UDim2.new(1,-32,1,0); mt.Position=UDim2.new(0,32,0,0); mt:GetPropertyChangedSignal("Text"):Connect(function() cfg.spamMsg=mt.Text end)
+        makeSliderRow(pf,"Count",1,20,5,"",function(v) cfg.spamCount=v end)
+        local sb=mkbtn(pf,"SPAM",11,RED); sb.Size=UDim2.new(1,0,0,22); sb.MouseButton1Click:Connect(function() doChatSpam(cfg.spamMsg~="" and cfg.spamMsg or "GLADIATOR",cfg.spamCount); setStatus("Spammed x"..cfg.spamCount,true) end)
+     end,action=function() doChatSpam(cfg.spamMsg,cfg.spamCount) end},
+    {n=".tp",tag="ACT",desc="Open teleport player picker",action=function() openTPGui() end},
+    {n=".heal",tag="ACT",desc="Restore full health",action=function() doHeal(); setStatus("Healed!",true) end},
+    {n=".kill",tag="ACT",desc="Kill yourself",action=function() doKill(); setStatus("RIP",false) end},
+    {n=".rejoin",tag="ACT",desc="Rejoin this server",action=function() doRejoin() end},
+    {n=".fps_boost",tag="ACT",desc="Set graphics to level 1",action=function() doFPSBoost(); setStatus("Graphics lowered",true) end},
+    {n=".gladre",tag="ACT",desc="Reset character in place",action=function() doGladRe(); setStatus("Reset in place",true) end},
+    {n=".facebang",tag="ACT",desc="Face bang nearest player",action=function()
+        setStatus("Loading facebang...",true)
+        pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EnterpriseExperience/bruhlolw/refs/heads/main/face_bang_script.lua"))() end)
+        setStatus("Facebang active!",true); notify(".facebang activated")
+    end},
+    {n=".baseplate",tag="ACT",desc="Create/destroy 40k baseplate",
+     buildPanel=function(pf)
+        local info=Instance.new("TextLabel",pf); info.Size=UDim2.new(1,0,0,16); info.BackgroundTransparency=1
+        info.Text="Creates a 40,000x40,000 stud baseplate at y=0"; info.TextColor3=C(120,120,120); info.TextSize=10; info.Font=Enum.Font.Code; info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
+
+        -- colour swatches
+        local colorRow=frame(pf,UDim2.new(1,0,0,22),nil); colorRow.BackgroundTransparency=1
+        lbl(colorRow,"Color",11,C(153,153,153)).Size=UDim2.new(0,38,1,0)
+        local bpCols={C(50,50,50),C(180,180,180),C(30,100,30),C(30,30,150),C(150,30,30),C(180,120,0)}
+        for i,col in ipairs(bpCols) do
+            local cb=frame(colorRow,UDim2.new(0,16,0,16),UDim2.new(0,42+(i-1)*21,0.5,-8),col); corner(cb,3)
+            local cbBtn=Instance.new("TextButton",colorRow); cbBtn.Size=UDim2.new(0,16,0,16); cbBtn.Position=UDim2.new(0,42+(i-1)*21,0.5,-8); cbBtn.BackgroundTransparency=1; cbBtn.Text=""; cbBtn.BorderSizePixel=0
+            cbBtn.MouseButton1Click:Connect(function()
+                cfg.bpColor=col
+                local f=workspace:FindFirstChild("TERRAIN_EDITOR")
+                if f then for _,part in ipairs(f:GetChildren()) do if part:IsA("BasePart") then part.Color=col end end end
+            end)
+        end
+
+        local btnRow=frame(pf,UDim2.new(1,0,0,26),nil); btnRow.BackgroundTransparency=1
+        local createBtn=mkbtn(btnRow,"CREATE",11,C(0,180,80)); createBtn.Size=UDim2.new(0.48,0,1,0)
+        createBtn.MouseButton1Click:Connect(function() doCreateBaseplate(); setStatus("Baseplate created",true); notify(".baseplate created") end)
+        local destroyBtn=mkbtn(btnRow,"DESTROY",11,C(200,50,50)); destroyBtn.Size=UDim2.new(0.48,0,1,0); destroyBtn.Position=UDim2.new(0.52,0,0,0)
+        destroyBtn.MouseButton1Click:Connect(function() doDestroyBaseplate(); setStatus("Baseplate removed",false); notify(".baseplate removed") end)
+     end,
+     action=function()
+        if workspace:FindFirstChild("TERRAIN_EDITOR") then doDestroyBaseplate(); setStatus("Baseplate removed",false)
+        else doCreateBaseplate(); setStatus("Baseplate created",true) end
+     end},
+    {n=".iy",tag="ACT",desc="Load Infinite Yield",action=function()
+        setStatus("Loading Infinite Yield...",true)
+        pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/edgeiy/infiniteyield/master/source"))() end)
+        setStatus("Infinite Yield loaded",true); notify(".iy loaded")
+    end},
+    {n=".gladanim",tag="SOON",desc="Animations coming soon",action=function() showComingSoon("ANIMATIONS COMINGGG SOONN!!!") end},
 }
 
 local allBtns={}
@@ -933,9 +855,9 @@ local tESP=makeTab("esp"); lbl(tESP,"ESP / VISUALS",12,RED).Size=UDim2.new(1,0,0
 local espPanel=frame(tESP,UDim2.new(1,0,0,10),UDim2.new(0,0,0,22),C(14,14,14)); espPanel.AutomaticSize=Enum.AutomaticSize.Y; corner(espPanel,6); stroke(espPanel,C(42,0,0))
 local ep=Instance.new("UIPadding",espPanel); ep.PaddingTop=UDim.new(0,10); ep.PaddingBottom=UDim.new(0,10); ep.PaddingLeft=UDim.new(0,10); ep.PaddingRight=UDim.new(0,10); Instance.new("UIListLayout",espPanel).Padding=UDim.new(0,8)
 makeToggleRow(espPanel,"Player ESP (highlight)",false,function(v) S.esp=v; refreshESP() end)
-makeToggleRow(espPanel,"Box ESP (chest box)",false,function(v) S.boxesp=v; if v then startBoxESP() else stopBoxESP() end end)
-makeToggleRow(espPanel,"Tracers (lines to players)",false,function(v) S.tracers=v; if v then startTracers() else stopTracers() end end)
-makeToggleRow(espPanel,"Name Tags (through walls)",false,function(v) S.nametags=v; if v then startNameTags() else stopNameTags() end end)
+makeToggleRow(espPanel,"Box ESP",false,function(v) S.boxesp=v; if v then startBoxESP() else stopBoxESP() end end)
+makeToggleRow(espPanel,"Tracers",false,function(v) S.tracers=v; if v then startTracers() else stopTracers() end end)
+makeToggleRow(espPanel,"Name Tags",false,function(v) S.nametags=v; if v then startNameTags() else stopNameTags() end end)
 makeToggleRow(espPanel,"Health Bar",true,function(v) end); makeSep(espPanel)
 local colorRow=frame(espPanel,UDim2.new(1,0,0,22),nil); colorRow.BackgroundTransparency=1; lbl(colorRow,"ESP Color",11,C(153,153,153)).Size=UDim2.new(0,70,1,0)
 local colors={C(255,0,0),C(255,255,255),C(0,255,136),C(255,170,0)}
@@ -951,22 +873,19 @@ end
 local tMisc=makeTab("misc"); lbl(tMisc,"MISC TOOLS",12,RED).Size=UDim2.new(1,0,0,16)
 local miscPanel=frame(tMisc,UDim2.new(1,0,0,10),UDim2.new(0,0,0,22),C(14,14,14)); miscPanel.AutomaticSize=Enum.AutomaticSize.Y; corner(miscPanel,6); stroke(miscPanel,C(42,0,0))
 local mp=Instance.new("UIPadding",miscPanel); mp.PaddingTop=UDim.new(0,10); mp.PaddingBottom=UDim.new(0,10); mp.PaddingLeft=UDim.new(0,10); mp.PaddingRight=UDim.new(0,10); Instance.new("UIListLayout",miscPanel).Padding=UDim.new(0,8)
-
 local tpRow=frame(miscPanel,UDim2.new(1,0,0,22),nil); tpRow.BackgroundTransparency=1
 lbl(tpRow,"Teleport",11,C(153,153,153)).Size=UDim2.new(0,60,1,0)
 local tpGo=mkbtn(tpRow,"OPEN PICKER",11,RED); tpGo.Size=UDim2.new(1,-64,1,0); tpGo.Position=UDim2.new(0,64,0,0)
 tpGo.MouseButton1Click:Connect(function() openTPGui() end)
-
 local spRow=frame(miscPanel,UDim2.new(1,0,0,22),nil); spRow.BackgroundTransparency=1
 lbl(spRow,"Chat Spam",11,C(153,153,153)).Size=UDim2.new(0,66,1,0)
 local spBox=textbox(spRow,"Message..."); spBox.Size=UDim2.new(1,-112,1,0); spBox.Position=UDim2.new(0,70,0,0)
 local spSend=mkbtn(spRow,"SEND",11,RED); spSend.Size=UDim2.new(0,38,1,0); spSend.Position=UDim2.new(1,-38,0,0)
 spSend.MouseButton1Click:Connect(function() local m=spBox.Text~="" and spBox.Text or "GLADIATOR"; doChatSpam(m,5); setStatus("Spammed: "..m,true) end)
 makeSep(miscPanel)
-
 local qRow=frame(miscPanel,UDim2.new(1,0,0,22),nil); qRow.BackgroundTransparency=1
-local ql=Instance.new("UIListLayout",qRow); ql.FillDirection=Enum.FillDirection.Horizontal; ql.Padding=UDim.new(0,5)
-local function qBtn(lb,col,fn) local b=mkbtn(qRow,lb,11,col); b.Size=UDim2.new(0,82,1,0); b.MouseButton1Click:Connect(fn); return b end
+local ql=Instance.new("UIListLayout",qRow); ql.FillDirection=Enum.FillDirection.Horizontal; ql.Padding=UDim.new(0,4)
+local function qBtn(lb,col,fn) local b=mkbtn(qRow,lb,10,col); b.Size=UDim2.new(0,78,1,0); b.MouseButton1Click:Connect(fn); return b end
 qBtn(".HEAL",C(0,200,80),function() doHeal(); setStatus("Healed!",true) end)
 qBtn(".KILL",C(255,50,50),function() doKill(); setStatus("RIP",false) end)
 qBtn(".REJOIN",RED,function() doRejoin() end)
@@ -986,6 +905,9 @@ resetBtn.MouseButton1Click:Connect(function()
     for k in pairs(S) do S[k]=false end
     stopFly(); stopNoclip(); stopAimlock(); stopInfJump(); stopAntiAfk(); stopBoxESP(); stopTracers(); stopNameTags(); stopFTP()
     setGodmode(false); setFreeze(false); setInvisible(false); setFullbright(false); refreshESP(); applySpeed(false)
+    cfg.jerkingEnabled=false
+    if cfg._jerkTrack then cfg._jerkTrack:Stop(); cfg._jerkTrack=nil end
+    if cfg._jerkAnim then cfg._jerkAnim:Destroy(); cfg._jerkAnim=nil end
     setStatus("All settings reset",false)
 end)
 
@@ -1003,24 +925,15 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- ════════════════════════════════════════════════
---   CHAT LISTENER - all commands work in chat
+--   CHAT LISTENER
 -- ════════════════════════════════════════════════
 plr.Chatted:Connect(function(msg)
-    local trimmed=msg:match("^%s*(.-)%s*$")
-    local lower=trimmed:lower()
-
-    -- .tp <PlayerName> - direct teleport with name
+    local trimmed=msg:match("^%s*(.-)%s*$"); local lower=trimmed:lower()
     local tpArg=trimmed:match("^%.tp%s+(.+)")
     if tpArg then local ok=doTeleport(tpArg); setStatus(ok and "Teleported to "..tpArg or "Player not found",ok); return end
-
-    -- .tp alone - open the picker GUI
     if lower==".tp" then openTPGui(); return end
-
-    -- .chat_spam <optional message>
     local spamArg=trimmed:match("^%.chat_spam%s*(.*)")
     if spamArg then local m=spamArg~="" and spamArg or cfg.spamMsg; doChatSpam(m,cfg.spamCount); setStatus("Spammed x"..cfg.spamCount,true); return end
-
-    -- All other commands
     for _,cd in ipairs(cmdDefs) do
         if lower==cd.n:lower() then
             if cd.tag=="TOG" then
@@ -1029,21 +942,18 @@ plr.Chatted:Connect(function(msg)
                 else if cd.onDisable then cd.onDisable() end; setStatus(cd.n.." OFF",false); notify(cd.n.." OFF") end
             elseif cd.tag=="ACT" or cd.tag=="SOON" then
                 if cd.action then cd.action() end; setStatus("Executed: "..cd.n,true)
-            end
-            break
+            end; break
         end
     end
 end)
 
 -- ════════════════════════════════════════════════
---   HOTKEY  RIGHT CTRL to toggle GUI
+--   HOTKEY + RESPAWN
 -- ════════════════════════════════════════════════
 UserInputService.InputBegan:Connect(function(inp,gp)
     if gp then return end
     if inp.KeyCode==Enum.KeyCode.RightControl then Main.Visible=not Main.Visible end
 end)
-
--- Re-apply features on respawn
 plr.CharacterAdded:Connect(function()
     task.wait(1)
     if S.speed then applySpeed(true) end
@@ -1055,6 +965,9 @@ plr.CharacterAdded:Connect(function()
     if S.nametags then stopNameTags(); startNameTags() end
 end)
 
-print("[Gladiator v3] Loaded — RIGHT CTRL to toggle | Key: GladiatorLimited12")
+print("[Gladiator v3] Loaded | Key: GladiatorLimited12 | RIGHT CTRL to toggle")
+print("Commands: .fly .speed .noclip .aimlock .esp .godmode .freeze .invisible .fullbright")
+print("          .inf_jump .antiafk .ftp .headsit .jerkoff .zoom .chat_spam .tp .heal")
+print("          .kill .rejoin .fps_boost .gladre .facebang .baseplate .iy .gladanim")
 
 end -- end loadMainGUI
