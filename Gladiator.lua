@@ -393,19 +393,61 @@ end
 local function doCreateBaseplate()
     local old=workspace:FindFirstChild("TERRAIN_EDITOR"); if old then old:Destroy() end
     local col=cfg.bpColor
-    local maxPart=2048; local divX=math.ceil(40000/maxPart); local divZ=math.ceil(40000/maxPart)
-    local pSX=40000/divX; local pSZ=40000/divZ
-    local folder=Instance.new("Folder"); folder.Name="TERRAIN_EDITOR"; folder.Parent=workspace
-    for i=0,divX-1 do
-        local ox=(i-(divX/2))*pSX+(pSX/2)
-        for j=0,divZ-1 do
-            local oz=(j-(divZ/2))*pSZ+(pSZ/2)
-            local part=Instance.new("Part"); part.Size=Vector3.new(pSX,5,pSZ)
-            part.Position=Vector3.new(ox,0,oz); part.Anchored=true
-            part.Material=Enum.Material.Asphalt; part.Color=col
-            part.Transparency=0; part.Parent=folder
+    local mat=cfg.bpMaterial or Enum.Material.SmoothPlastic
+
+    -- Raycast to find ground level AND sample its colour/material
+    local groundY=-10
+    local r=hrp()
+    if r then
+        local rp=RaycastParams.new(); rp.FilterType=Enum.RaycastFilterType.Exclude
+        if char() then rp.FilterDescendantsInstances={char()} end
+        local hit=workspace:Raycast(r.Position,Vector3.new(0,-500,0),rp)
+        if hit then
+            groundY=hit.Position.Y-2.5
+            -- If user hasn't picked a colour yet, sample the ground automatically
+            if not cfg.bpColorLocked then
+                if hit.Instance and hit.Instance:IsA("BasePart") then
+                    col=hit.Instance.Color
+                    mat=hit.Instance.Material
+                    cfg.bpColor=col
+                    cfg.bpMaterial=mat
+                elseif hit.Instance and hit.Instance:IsA("Terrain") then
+                    -- Terrain: use a grass-green that matches Roblox grass
+                    col=Color3.fromRGB(106,127,63)
+                    mat=Enum.Material.Grass
+                    cfg.bpColor=col
+                    cfg.bpMaterial=mat
+                end
+            end
+        else
+            groundY=r.Position.Y-10
         end
     end
+
+    local folder=Instance.new("Folder"); folder.Name="TERRAIN_EDITOR"; folder.Parent=workspace
+
+    local TILE=2048
+    local COUNT=math.ceil(40000/TILE)
+
+    task.spawn(function()
+        for i=0,COUNT-1 do
+            for j=0,COUNT-1 do
+                if not folder.Parent then return end
+                local ox=(i-(COUNT/2))*TILE+(TILE/2)
+                local oz=(j-(COUNT/2))*TILE+(TILE/2)
+                local part=Instance.new("Part")
+                part.Size=Vector3.new(TILE,5,TILE)
+                part.CFrame=CFrame.new(ox,groundY,oz)
+                part.Anchored=true
+                part.CanCollide=true
+                part.Material=mat
+                part.Color=col
+                part.Transparency=0
+                part.Parent=folder
+                if (i*COUNT+j)%4==0 then task.wait() end
+            end
+        end
+    end)
 end
 local function doDestroyBaseplate()
     local f=workspace:FindFirstChild("TERRAIN_EDITOR"); if f then f:Destroy() end
@@ -771,19 +813,54 @@ local cmdDefs={
     {n=".baseplate",tag="ACT",desc="Create/destroy 40k baseplate",
      buildPanel=function(pf)
         local info=Instance.new("TextLabel",pf); info.Size=UDim2.new(1,0,0,16); info.BackgroundTransparency=1
-        info.Text="Creates a 40,000x40,000 stud baseplate at y=0"; info.TextColor3=C(120,120,120); info.TextSize=10; info.Font=Enum.Font.Code; info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
+        info.Text="Creates a 40,000x40,000 stud baseplate below your feet"
+        info.TextColor3=C(120,120,120); info.TextSize=10; info.Font=Enum.Font.Code
+        info.TextXAlignment=Enum.TextXAlignment.Left; info.TextWrapped=true
 
-        -- colour swatches
-        local colorRow=frame(pf,UDim2.new(1,0,0,22),nil); colorRow.BackgroundTransparency=1
-        lbl(colorRow,"Color",11,C(153,153,153)).Size=UDim2.new(0,38,1,0)
-        local bpCols={C(50,50,50),C(180,180,180),C(30,100,30),C(30,30,150),C(150,30,30),C(180,120,0)}
-        for i,col in ipairs(bpCols) do
-            local cb=frame(colorRow,UDim2.new(0,16,0,16),UDim2.new(0,42+(i-1)*21,0.5,-8),col); corner(cb,3)
-            local cbBtn=Instance.new("TextButton",colorRow); cbBtn.Size=UDim2.new(0,16,0,16); cbBtn.Position=UDim2.new(0,42+(i-1)*21,0.5,-8); cbBtn.BackgroundTransparency=1; cbBtn.Text=""; cbBtn.BorderSizePixel=0
+        -- AUTO button: samples ground colour + material automatically on create
+        local autoRow=frame(pf,UDim2.new(1,0,0,22),nil); autoRow.BackgroundTransparency=1
+        lbl(autoRow,"Mode",11,C(153,153,153)).Size=UDim2.new(0,34,1,0)
+        local autoBtn=mkbtn(autoRow,"AUTO (match ground)",10,C(0,200,150))
+        autoBtn.Size=UDim2.new(1,-38,1,0); autoBtn.Position=UDim2.new(0,38,0,0)
+        autoBtn.MouseButton1Click:Connect(function()
+            cfg.bpColorLocked=false
+            cfg.bpMaterial=nil
+            autoBtn.BackgroundColor3=C(0,80,60)
+            setStatus("Baseplate will match the ground colour",true)
+        end)
+
+        -- Manual colour swatches
+        local bpCols={
+            {C(106,127,63),  Enum.Material.Grass},        -- Roblox grass green
+            {C(139,162,69),  Enum.Material.Grass},        -- bright grass
+            {C(80,100,45),   Enum.Material.Grass},        -- dark grass
+            {C(50,50,50),    Enum.Material.Asphalt},      -- dark asphalt
+            {C(130,130,130), Enum.Material.SmoothPlastic},-- grey
+            {C(220,220,220), Enum.Material.SmoothPlastic},-- light grey
+            {C(255,255,255), Enum.Material.SmoothPlastic},-- white
+            {C(20,20,20),    Enum.Material.SmoothPlastic},-- near black
+            {C(30,30,150),   Enum.Material.SmoothPlastic},-- blue
+            {C(150,30,30),   Enum.Material.SmoothPlastic},-- red
+        }
+
+        local row1=frame(pf,UDim2.new(1,0,0,22),nil); row1.BackgroundTransparency=1
+        lbl(row1,"Color",11,C(153,153,153)).Size=UDim2.new(0,34,1,0)
+        local row2=frame(pf,UDim2.new(1,0,0,22),nil); row2.BackgroundTransparency=1
+
+        for i,entry in ipairs(bpCols) do
+            local col,mat=entry[1],entry[2]
+            local row=i<=5 and row1 or row2
+            local xOff=i<=5 and (38+(i-1)*22) or (4+(i-6)*22)
+            local cb=frame(row,UDim2.new(0,18,0,18),UDim2.new(0,xOff,0.5,-9),col); corner(cb,4)
+            local selRing=Instance.new("UIStroke",cb); selRing.Color=C(255,255,255); selRing.Thickness=0
+            local cbBtn=Instance.new("TextButton",row); cbBtn.Size=UDim2.new(0,18,0,18); cbBtn.Position=UDim2.new(0,xOff,0.5,-9); cbBtn.BackgroundTransparency=1; cbBtn.Text=""; cbBtn.BorderSizePixel=0
             cbBtn.MouseButton1Click:Connect(function()
-                cfg.bpColor=col
+                cfg.bpColor=col; cfg.bpMaterial=mat; cfg.bpColorLocked=true
+                selRing.Thickness=2
+                autoBtn.BackgroundColor3=C(17,17,17)
+                -- live update existing baseplate
                 local f=workspace:FindFirstChild("TERRAIN_EDITOR")
-                if f then for _,part in ipairs(f:GetChildren()) do if part:IsA("BasePart") then part.Color=col end end end
+                if f then for _,part in ipairs(f:GetChildren()) do if part:IsA("BasePart") then part.Color=col; part.Material=mat end end end
             end)
         end
 
